@@ -1,0 +1,2 @@
+# Seminarni-prace
+Seminarni prace
