@@ -16,3 +16,7 @@ Přihlašovací obrazovka
 Hlavní menu
 
 ![](https://melonmc.cz/semi/dashboard.png)
+
+Seznam učitelů
+
+![](https://melonmc.cz/semi/teachers.png)
