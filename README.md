@@ -20,3 +20,6 @@ Hlavní menu
 Seznam učitelů
 
 ![](https://melonmc.cz/semi/teachers.png)
+
+![](https://melonmc.cz/semi/subjects.png)
+
