@@ -9,4 +9,4 @@ Klíčové vlastnosti:
   Docházka: Evidence přítomnosti studentů a automatizované výpisy.
   Komunikace: Rodiče a studenti mohou snadno komunikovat s učiteli.
 
-Desktop client ke stažení zde
+![](https://melonmc.cz/semi/login.png)
