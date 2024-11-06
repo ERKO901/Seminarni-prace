@@ -10,3 +10,4 @@ Klíčové vlastnosti:
   Docházka: Evidence přítomnosti studentů a automatizované výpisy.
   Komunikace: Rodiče a studenti mohou snadno komunikovat s učiteli.
 
+Stáhnout [zde](https://magistri.melonhost.cz/dowload)
