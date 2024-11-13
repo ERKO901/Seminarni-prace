@@ -28,11 +28,11 @@ app.get('/download', (req, res) => {
         if (err) {
             if (res.headersSent) {
                 // Pokud už byly odeslány hlavičky, pouze loguj chybu a nedělej nic dalšího
-                console.log('Chyba při odesílání souboru ke stažení:', err);
+                console.log('Error in sending file download:', err);
             } else {
                 // Pošli odpověď s chybou pouze pokud hlavičky ještě nebyly odeslány
-                console.log('Chyba se stažením souboru:', err);
-                res.status(500).send('Chyba se stažením souboru');
+                console.log('Error with file download:', err);
+                res.status(500).send('Error with file download');
             }
         }
     });
@@ -40,5 +40,5 @@ app.get('/download', (req, res) => {
 
 // Spusť server
 app.listen(PORT, () => {
-    console.log(`Server běží na portu ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
