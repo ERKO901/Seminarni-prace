@@ -1,40 +1,40 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); // Import připojení k databázi
-const jwt = require('jsonwebtoken'); // Předpoklad použití JSON Web Tokenů pro autentizaci
+const db = require('../db'); // Import your database connection
+const jwt = require('jsonwebtoken'); // Assuming you're using JSON Web Tokens for authentication
 
-// Middleware pro zpracování chyb
+// Middleware to handle errors
 const errorHandler = (err, res) => {
     console.error(err);
     res.status(500).json({ message: 'Internal Server Error' });
 };
 
-// Middleware pro ověření tokenu a administrátorského přístupu
+// Middleware to verify token and admin status
 const verifyAdminToken = (req, res, next) => {
-    const token = req.headers['authorization']?.split(' ')[1]; // Získání tokenu z hlavičky autorizace
+    const token = req.headers['authorization']?.split(' ')[1]; // Get the token from the authorization header
 
     if (!token) {
         return res.status(401).json({ message: 'Authorization token is required' });
     }
 
-    // Ověření tokenu (předpoklad použití tajného klíče pro ověření)
+    // Verify the token (assuming you have a secret to verify with)
     jwt.verify(token, 'mySuperSecretKey123!', (err, decoded) => {
         if (err) {
             return res.status(403).json({ message: 'Invalid or expired token' });
         }
 
-        // Ověření, zda je uživatel administrátorem
+        // Check if the user is an admin
         db.query('SELECT is_admin FROM teachers WHERE id = ?', [decoded.userId], (err, results) => {
             if (err) return errorHandler(err, res);
             if (results.length === 0 || results[0].is_admin !== 1) {
                 return res.status(403).json({ message: 'Access denied: Admins only' });
             }
-            next(); // Uživatel je administrátor, pokračuje na další handler
+            next(); // User is admin, proceed to the route handler
         });
     });
 };
 
-// Získání všech předmětů (vyžaduje administrátorský token)
+// Get all subjects (requires admin token)
 router.get('/', verifyAdminToken, (req, res) => {
     db.query('SELECT * FROM subjects', (err, results) => {
         if (err) return errorHandler(err, res);
@@ -42,9 +42,9 @@ router.get('/', verifyAdminToken, (req, res) => {
     });
 });
 
-// Vytvoření nového předmětu (vyžaduje administrátorský token)
+// Create a new subject (requires admin token)
 router.post('/', verifyAdminToken, (req, res) => {
-    const { subject_name } = req.body; // Odpovídá názvu sloupce
+    const { subject_name } = req.body; // Updated to match the column name
 
     if (!subject_name) {
         return res.status(400).json({ message: 'Subject name is required' });
@@ -56,10 +56,10 @@ router.post('/', verifyAdminToken, (req, res) => {
     });
 });
 
-// Aktualizace předmětu (vyžaduje administrátorský token)
+// Update a subject (requires admin token)
 router.put('/:id', verifyAdminToken, (req, res) => {
     const { id } = req.params;
-    const { subject_name } = req.body; // Odpovídá názvu sloupce
+    const { subject_name } = req.body; // Updated to match the column name
 
     if (!subject_name) {
         return res.status(400).json({ message: 'Subject name is required' });
@@ -74,7 +74,7 @@ router.put('/:id', verifyAdminToken, (req, res) => {
     });
 });
 
-// Smazání předmětu (vyžaduje administrátorský token)
+// Delete a subject (requires admin token)
 router.delete('/:id', verifyAdminToken, (req, res) => {
     const { id } = req.params;
 
@@ -87,4 +87,4 @@ router.delete('/:id', verifyAdminToken, (req, res) => {
     });
 });
 
-module.exports = router; // Export routeru pro použití v hlavní aplikaci
+module.exports = router;
