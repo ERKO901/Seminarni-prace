@@ -1,15 +1,15 @@
-const mysql = require('mysql2'); // Načtení knihovny mysql2 pro připojení k MySQL databázi
+const mysql = require('mysql2');
 
 const connection = mysql.createConnection({
-    host: 'example.com',     // Nastavení hostname databázového serveru
-    user: 'user',             // Uživatelské jméno pro přístup k databázi
-    password: 'password',     // Heslo pro přístup k databázi
-    database: 'database'      // Název databáze, ke které se chceme připojit
+    host: 'example.com',
+    user: 'user',
+    password: 'password',
+    database: 'database'
 });
 
 connection.connect((err) => {
-    if (err) throw err;       // Pokud dojde k chybě připojení, vyhoď chybu
-    console.log('Connected to MySQL database'); // Potvrzení úspěšného připojení
+    if (err) throw err;
+    console.log('Connected to MySQL database');
 });
 
-module.exports = connection; // Export připojení pro použití v dalších částech aplikace
+module.exports = connection;
