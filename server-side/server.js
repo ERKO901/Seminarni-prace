@@ -4,33 +4,33 @@ const classRoutes = require('./routes/classRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const parentRoutes = require('./routes/parentRoutes');
-const db = require('./db'); // Import připojení k databázi
+const db = require('./db'); // Import the database connection
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 25591;
 
-// Použij express.json() k parsování příchozích JSON požadavků
-app.use(express.json()); // Tento middleware automaticky parsuje JSON těla
+// Use express.json() to parse incoming JSON requests
+app.use(express.json()); // This middleware will automatically parse JSON bodies
 
-// Definuj jednotlivé trasy
+// Define the routes
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/parents', parentRoutes);
 
-// Endpoint ke stažení souboru
+// Download endpoint
 app.get('/download', (req, res) => {
-    const filePath = path.join(__dirname, 'download', 'Magistri.exe'); // Definuj cestu k APK souboru
+    const filePath = path.join(__dirname, 'download', 'Magistri.exe'); // Define the path to the APK file
 
     res.download(filePath, 'Magistri.exe', (err) => {
         if (err) {
             if (res.headersSent) {
-                // Pokud už byly odeslány hlavičky, pouze loguj chybu a nedělej nic dalšího
+                // If headers are already sent, just log the error and do nothing else
                 console.log('Error in sending file download:', err);
             } else {
-                // Pošli odpověď s chybou pouze pokud hlavičky ještě nebyly odeslány
+                // Only send an error response if headers aren't already sent
                 console.log('Error with file download:', err);
                 res.status(500).send('Error with file download');
             }
@@ -38,7 +38,7 @@ app.get('/download', (req, res) => {
     });
 });
 
-// Spusť server
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
