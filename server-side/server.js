@@ -1,25 +1,44 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const teacherRoutes = require('./routes/teacherRoutes');
 const classRoutes = require('./routes/classRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const parentRoutes = require('./routes/parentRoutes');
-const db = require('./db'); // Import the database connection
+const db = require('./db'); // Import připojení k databázi
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 25591;
 
-app.use(bodyParser.json());
+// Použij express.json() k parsování příchozích JSON požadavků
+app.use(express.json()); // Tento middleware automaticky parsuje JSON těla
 
-// Define the routes
+// Definuj jednotlivé trasy
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/parents', parentRoutes);
 
-// Start the server
+// Endpoint ke stažení souboru
+app.get('/download', (req, res) => {
+    const filePath = path.join(__dirname, 'download', 'Magistri.exe'); // Definuj cestu k APK souboru
+
+    res.download(filePath, 'Magistri.exe', (err) => {
+        if (err) {
+            if (res.headersSent) {
+                // Pokud už byly odeslány hlavičky, pouze loguj chybu a nedělej nic dalšího
+                console.log('Chyba při odesílání souboru ke stažení:', err);
+            } else {
+                // Pošli odpověď s chybou pouze pokud hlavičky ještě nebyly odeslány
+                console.log('Chyba se stažením souboru:', err);
+                res.status(500).send('Chyba se stažením souboru');
+            }
+        }
+    });
+});
+
+// Spusť server
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server běží na portu ${PORT}`);
 });
