@@ -7,21 +7,14 @@ class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
 
   @override
-  State<TimetableScreen> createState() => _TimetableScreenState();
+  State<TimetableScreen> createState() => TimetableScreenState();
 }
 
-class _TimetableScreenState extends State<TimetableScreen> {
-  final DataService _dataService = DataService();
+class TimetableScreenState extends State<TimetableScreen> {
+  final DataService dataService = DataService();
 
-  final List<String> _dayNames = [
-    'Po',
-    'Út',
-    'St',
-    'Čt',
-    'Pá',
-  ];
-
-  final List<String> _fullDayNames = [
+  final List<String> dayNames = ['Po', 'Út', 'St', 'Čt', 'P'];
+  final List<String> fullDayNames = [
     'Pondělí',
     'Úterý',
     'Středa',
@@ -29,7 +22,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     'Pátek',
   ];
 
-  final List<Map<String, String>> _timeSlots = [
+  final List<Map<String, String>> timeSlots = [
     {'period': '1', 'start': '7:05', 'end': '7:50'},
     {'period': '2', 'start': '8:00', 'end': '8:45'},
     {'period': '3', 'start': '8:55', 'end': '9:40'},
@@ -40,13 +33,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
     {'period': '8', 'start': '13:35', 'end': '14:20'},
   ];
 
-  TimetableEntry? _selectedEntry;
+  TimetableEntry? selectedEntry;
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final currentStudent = dataService.getCurrentStudent();
 
-    final currentStudent = _dataService.getCurrentStudent();
     if (currentStudent == null) {
       return Scaffold(
         backgroundColor: Colors.transparent,
@@ -54,11 +47,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
           title: const Text('Rozvrh'),
           backgroundColor: Colors.transparent,
         ),
-        body: const Center(child: Text('Žádný student není přihlášen')),
+        body: const Center(
+          child: Text('Žádný student není přihlášen'),
+        ),
       );
     }
 
-    final timetable = _dataService.getTimetableForClass(currentStudent.classId);
+    final timetable = dataService.getTimetableForClass(currentStudent.classId);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -68,65 +63,69 @@ class _TimetableScreenState extends State<TimetableScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
-            onPressed: () => _showInfoDialog(context),
+            onPressed: () => showInfoDialog(context),
           ),
         ],
       ),
       body: Align(
         alignment: Alignment.topCenter,
-        child: SingleChildScrollView(
+        child: SingleChildScrollView( // vertical scroll
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 1400,             ),
-            child: _buildTimetableView(timetable, screenWidth),
+            constraints: const BoxConstraints(maxWidth: 1400),
+            child: buildTimetableView(timetable, screenWidth),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTimetableView(
-      List<TimetableEntry> timetable,
-      double screenWidth,
-      ) {
-        final isDesktop = screenWidth > 800;
+  Widget buildTimetableView(List<TimetableEntry> timetable, double screenWidth) {
+    final isDesktop = screenWidth > 800;
 
-        final effectiveWidth = screenWidth > 1400 ? 1400.0 : screenWidth;
+    // allow grid to be wider than screen on mobile
+    final effectiveWidth = isDesktop ? (screenWidth > 1400 ? 1400.0 : screenWidth) : 1200.0;
 
-        final dayColumnWidth = isDesktop ? 70.0 : 50.0;
+    final dayColumnWidth = isDesktop ? 70.0 : 50.0;
     final outerMargin = isDesktop ? 16.0 : 12.0;
     final innerPadding = isDesktop ? 20.0 : 12.0;
     final cellMargin = 2.0;
 
-        final totalHorizontalSpace = (outerMargin * 2) +
+    final totalHorizontalSpace = (outerMargin * 2) +
         (innerPadding * 2) +
         dayColumnWidth +
-        (cellMargin * 2 * _timeSlots.length);
+        (cellMargin * 2 * timeSlots.length);
 
     final availableWidth = effectiveWidth - totalHorizontalSpace;
-    final cellWidth = availableWidth / _timeSlots.length;
-
-        final cellHeight = isDesktop ? 85.0 : 70.0;
+    final cellWidth = availableWidth / timeSlots.length;
+    final cellHeight = isDesktop ? 85.0 : 70.0;
 
     return Container(
-      width: effectiveWidth,
       margin: EdgeInsets.all(outerMargin),
       child: AppTheme.glass(
         borderRadius: isDesktop ? 20 : 18,
         padding: EdgeInsets.all(innerPadding),
         color: Colors.white.withOpacity(0.08),
-        child: _buildTimetableGrid(
-          timetable,
-          cellWidth,
-          cellHeight,
-          dayColumnWidth,
-          isDesktop,
+        child: SingleChildScrollView(          // <── horizontal scroll
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              // total width of the grid, so it can overflow on mobile and be scrollable
+              minWidth: effectiveWidth,
+            ),
+            child: buildTimetableGrid(
+              timetable,
+              cellWidth,
+              cellHeight,
+              dayColumnWidth,
+              isDesktop,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTimetableGrid(
+  Widget buildTimetableGrid(
       List<TimetableEntry> timetable,
       double cellWidth,
       double cellHeight,
@@ -137,15 +136,16 @@ class _TimetableScreenState extends State<TimetableScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-                Row(
+        // header row
+        Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-                        SizedBox(
+            SizedBox(
               width: dayColumnWidth,
               height: isDesktop ? 60 : 50,
             ),
-                        ...List.generate(_timeSlots.length, (index) {
-              final timeSlot = _timeSlots[index];
+            ...List.generate(timeSlots.length, (index) {
+              final timeSlot = timeSlots[index];
               return Container(
                 width: cellWidth,
                 height: isDesktop ? 60 : 50,
@@ -186,14 +186,16 @@ class _TimetableScreenState extends State<TimetableScreen> {
             }),
           ],
         ),
-                ...List.generate(5, (dayIndex) {
+        // day rows
+        ...List.generate(5, (dayIndex) {
           final dayOfWeek = dayIndex + 1;
           final isToday = DateTime.now().weekday == dayOfWeek;
 
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-                            Container(
+              // day column
+              Container(
                 width: dayColumnWidth,
                 height: cellHeight,
                 margin: const EdgeInsets.all(2),
@@ -213,7 +215,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _dayNames[dayIndex],
+                        dayNames[dayIndex],
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -234,7 +236,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   ),
                 ),
               ),
-                            ...List.generate(_timeSlots.length, (periodIndex) {
+              // period cells
+              ...List.generate(timeSlots.length, (periodIndex) {
                 final period = periodIndex + 1;
                 final entry = timetable.firstWhere(
                       (e) => e.dayOfWeek == dayOfWeek && e.period == period,
@@ -251,7 +254,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   ),
                 );
 
-                return _buildTimetableCell(
+                return buildTimetableCell(
                   entry,
                   cellWidth,
                   cellHeight,
@@ -265,7 +268,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  Widget _buildTimetableCell(
+  Widget buildTimetableCell(
       TimetableEntry entry,
       double width,
       double height,
@@ -287,8 +290,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
       );
     }
 
-    final subject = _dataService.getSubjectById(entry.subjectId);
-    final teacher = _dataService.getTeacherById(entry.teacherId);
+    final subject = dataService.getSubjectById(entry.subjectId);
+    final teacher = dataService.getTeacherById(entry.teacherId);
 
     if (subject == null) {
       return Container(
@@ -298,14 +301,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
       );
     }
 
-    final isSelected = _selectedEntry?.id == entry.id;
+    final isSelected = selectedEntry?.id == entry.id;
 
     return GestureDetector(
-      onTap: () => _showLessonDetail(entry, subject, teacher),
+      onTap: () => showLessonDetail(entry, subject, teacher),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _selectedEntry = entry),
-        onExit: (_) => setState(() => _selectedEntry = null),
+        onEnter: (_) => setState(() => selectedEntry = entry),
+        onExit: (_) => setState(() => selectedEntry = null),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: width,
@@ -380,7 +383,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  void _showLessonDetail(
+  void showLessonDetail(
       TimetableEntry entry,
       Subject subject,
       Teacher? teacher,
@@ -428,7 +431,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                       style: const TextStyle(fontSize: 18),
                     ),
                     Text(
-                      '${_fullDayNames[entry.dayOfWeek - 1]} | ${entry.period}. hodina',
+                      '${fullDayNames[entry.dayOfWeek - 1]} | ${entry.period}. hodina',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -444,17 +447,20 @@ class _TimetableScreenState extends State<TimetableScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow(Icons.access_time, 'Čas', '$startTime - $endTime'),
+              buildDetailRow(Icons.access_time, 'Čas', '$startTime - $endTime'),
               const SizedBox(height: 12),
-              _buildDetailRow(Icons.person_outline, 'Učitel',
-                  teacher?.fullName ?? 'Neznámý'),
+              buildDetailRow(
+                Icons.person_outline,
+                'Učitel',
+                teacher?.fullName ?? 'Neznámý',
+              ),
               const SizedBox(height: 12),
-              _buildDetailRow(Icons.room_outlined, 'Místnost', entry.room),
+              buildDetailRow(Icons.room_outlined, 'Místnost', entry.room),
               const SizedBox(height: 12),
-              _buildDetailRow(
+              buildDetailRow(
                 Icons.event_outlined,
                 'Den',
-                _fullDayNames[entry.dayOfWeek - 1],
+                fullDayNames[entry.dayOfWeek - 1],
               ),
             ],
           ),
@@ -469,7 +475,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
+  Widget buildDetailRow(IconData icon, String label, String value) {
     return Row(
       children: [
         Icon(icon, size: 20, color: Colors.grey[600]),
@@ -485,7 +491,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  void _showInfoDialog(BuildContext context) {
+  void showInfoDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -497,9 +503,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
             children: [
               Text('Zobrazení týdenního rozvrhu hodin.'),
               SizedBox(height: 12),
-              Text('• Kliknutím na hodinu zobrazíte detaily'),
-              Text('• Aktuální den je zvýrazněn oranžově'),
-              Text('• Barvy odpovídají jednotlivým předmětům'),
+              Text('Na mobilu můžete rozvrh posouvat vodorovně pro zobrazení všech hodin.'),
+              Text('Kliknutím na hodinu zobrazíte detaily.'),
+              Text('Aktuální den je zvýrazněn oranžově.'),
+              Text('Barvy odpovídají jednotlivým předmětům.'),
             ],
           ),
         );
